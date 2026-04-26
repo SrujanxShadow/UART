@@ -12,14 +12,14 @@ module top_module(
     wire rx_done;
 
     // Baud Generator
-    baud_generator baud_inst(
+    baud_generator baud(
         .clk(clk),
         .reset(reset),
         .tick(tick)
     );
 
     // UART Receiver
-    uart_rx rx_inst(
+    uart_rx rx(
         .clk(clk),
         .reset(reset),
         .tick(tick),
@@ -29,7 +29,7 @@ module top_module(
     );
 
     // UART Transmitter (optional here)
-    uart_tx tx_inst(
+    uart_tx tx(
         .clk(clk),
         .reset(reset),
         .tick(tick),
