@@ -60,7 +60,7 @@ module uart_tx(
                     if (tick)
                     begin
                         tx <= shift_reg[0];   // send LSB
-                        shift_reg <= shift_reg >> 1;
+                        shift_reg <= shift_reg[bit_count];
                         bit_count <= bit_count + 1;
 
                         if (bit_count == 7)
