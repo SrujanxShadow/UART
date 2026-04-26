@@ -53,7 +53,7 @@ module uart_rx(
                 begin
                     if (tick)
                     begin
-                        shift_reg <= {rx, shift_reg[7:1]}; // shift in
+                        shift_reg <= rx, shift_reg[bit_count]; // shift in
                         bit_count <= bit_count + 1;
 
                         if (bit_count == 7)
