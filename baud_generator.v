@@ -25,7 +25,7 @@ module baud_generator(
             else
             begin
                 count <= count + 1;
-                tick <= 0;
+                tick <= ~tick;
             end
         end
     end
