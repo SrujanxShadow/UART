@@ -1,33 +1,39 @@
-module baud_generator(
-    input clk,          // 100 MHz clock from Basys 3
-    input reset,        // reset signal
-    output reg tick     // baud rate tick output
+module baud_generator (
+    input clk,
+    input rst,
+    input sync_rst, 
+    output reg tick,
+    output reg half_tick
 );
 
-    parameter BAUD_COUNT = 10416;  // for 9600 baud
+parameter BAUD_DIV = 10000;  // 100 MHz / 9600
+parameter HALF_DIV = 5000;
 
-    reg [13:0] count = 0;   // enough to count up to 10416
+reg [13:0] counter;
 
-    always @(posedge clk or posedge reset)
-    begin
-        if (reset)
-        begin
-            count <= 0;
-            tick <= 0;
-        end
-        else
-        begin
-            if (count == BAUD_COUNT - 1)
-            begin
-                count <= 0;
-                tick <= 1;   // generate 1-cycle pulse
-            end
-            else
-            begin
-                count <= count + 1;
-                tick <= ~tick;
-            end
+always @(posedge clk or posedge rst) begin
+    if (rst) begin
+        counter <= 0;
+        tick <= 0;
+        half_tick <= 0;
+    end 
+    else begin
+        tick <= 0;
+        half_tick <= 0;
+
+        if (sync_rst) begin
+            counter <= 0;
+        end 
+        else if (counter == BAUD_DIV - 1) begin
+            counter <= 0;
+            tick <= 1;
+        end 
+        else begin
+            if (counter == HALF_DIV - 1)
+                half_tick <= 1;
+                counter <= counter + 1;
         end
     end
+end
 
 endmodule
