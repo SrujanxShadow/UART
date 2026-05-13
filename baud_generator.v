@@ -6,8 +6,8 @@ module baud_generator (
     output reg half_tick
 );
 
-parameter BAUD_DIV = 10000;  // 100 MHz / 9600
-parameter HALF_DIV = 5000;
+parameter BAUD_DIV = 10416;  // 100 MHz / 9600
+parameter HALF_DIV = 5208;
 
 reg [13:0] counter;
 
