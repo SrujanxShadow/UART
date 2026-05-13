@@ -1,83 +1,70 @@
-module uart_rx(
+module uart_rx (
     input clk,
-    input reset,
-    input tick,          // baud tick
-    input rx,            // serial input
-
+    input rst,
+    input tick,
+    input half_tick,
+    input rx,
     output reg [7:0] data_out,
-    output reg done
+    output reg rx_done,
+    output reg baud_sync
 );
 
-    // FSM states
-    parameter IDLE  = 3'b000;
-    parameter START = 3'b001;
-    parameter DATA  = 3'b010;
-    parameter STOP  = 3'b011;
-    parameter DONE  = 3'b100;
+parameter IDLE  = 2'd0;
+parameter START = 2'd1;
+parameter DATA  = 2'd2;
+parameter STOP  = 2'd3;
 
-    reg [2:0] state = IDLE;
+reg [1:0] state;
+reg [2:0] bit_index;
 
-    reg [7:0] shift_reg;
-    reg [2:0] bit_count;
+always @(posedge clk or posedge rst) begin
+    if (rst) begin
+        state <= IDLE;
+        bit_index <= 0;
+        data_out <= 0;
+        rx_done <= 0;
+        baud_sync <= 0;
+    end 
+    else begin
+        rx_done <= 0;
+        baud_sync <= 0;
 
-    always @(posedge clk or posedge reset)
-    begin
-        if (reset)
-        begin
-            state <= IDLE;
-            bit_count <= 0;
-            done <= 0;
-        end
-        else
-        begin
-            case(state)
-
-                IDLE:
-                begin
-                    done <= 0;
-                    if (rx == 0)   // detect start bit
-                        state <= START;
+        case (state)
+            IDLE: begin
+                if (rx==0) begin
+                    baud_sync <= 1; 
+                    state <= START;
                 end
+            end
 
-                START:
-                begin
-                    if (tick)
-                    begin
-                        // move to data sampling
+            START: begin
+                if (half_tick) begin
+                    if (rx==0) begin
                         state <= DATA;
-                        bit_count <= 0;
-                    end
+                        bit_index <= 0;
+                    end 
+                    else state <= IDLE;
                 end
+            end
 
-                DATA:
-                begin
-                    if (tick)
-                    begin
-                        shift_reg <= rx, shift_reg[bit_count]; // shift in
-                        bit_count <= bit_count + 1;
-
-                        if (bit_count == 7)
-                            state <= STOP;
-                    end
+            DATA: begin
+                if (tick) begin
+                    data_out[bit_index] <= rx;
+                    if (bit_index == 7)
+                        state <= STOP;
+                    else
+                        bit_index <= bit_index + 1;
                 end
+            end
 
-                STOP:
-                begin
-                    if (tick)
-                    begin
-                        state <= DONE;
-                    end
-                end
-
-                DONE:
-                begin
-                    data_out <= shift_reg;
-                    done <= 1;
+            STOP: begin
+                if (tick) begin
+                    rx_done <= 1;
                     state <= IDLE;
                 end
-
-            endcase
-        end
+            end
+        endcase
     end
+end
 
 endmodule
